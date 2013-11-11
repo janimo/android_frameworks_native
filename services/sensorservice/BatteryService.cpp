@@ -34,7 +34,8 @@ BatteryService::BatteryService() {
     const sp<IServiceManager> sm(defaultServiceManager());
     if (sm != NULL) {
         const String16 name("batterystats");
-        mBatteryStatService = sm->getService(name);
+        // batterystats is a Java based service, so disabling it for now
+        //mBatteryStatService = sm->getService(name);
     }
 }
 
