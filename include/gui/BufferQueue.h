@@ -26,6 +26,7 @@
 #include <gui/IGraphicBufferAlloc.h>
 #include <gui/IGraphicBufferProducer.h>
 #include <gui/IGraphicBufferConsumer.h>
+#include <gui/NativeBufferAlloc.h>
 
 #include <ui/Fence.h>
 #include <ui/GraphicBuffer.h>
@@ -79,7 +80,8 @@ public:
     // BufferQueue manages a pool of gralloc memory slots to be used by
     // producers and consumers. allocator is used to allocate all the
     // needed gralloc buffers.
-    BufferQueue(const sp<IGraphicBufferAlloc>& allocator = NULL);
+    BufferQueue(const sp<IGraphicBufferAlloc>& allocator = NULL,
+                const sp<NativeBufferAlloc>& native_allocator = NULL);
     virtual ~BufferQueue();
 
     /*
@@ -506,6 +508,10 @@ private:
     // mGraphicBufferAlloc is the connection to SurfaceFlinger that is used to
     // allocate new GraphicBuffer objects.
     sp<IGraphicBufferAlloc> mGraphicBufferAlloc;
+
+    // mNativeBufferAlloc is an implementation-specific interface used
+    // to allocate GraphicBuffer objects.
+    sp<NativeBufferAlloc> mNativeBufferAlloc;
 
     // mConsumerListener is used to notify the connected consumer of
     // asynchronous events that it may wish to react to.  It is initially set

@@ -65,7 +65,8 @@ static const char* scalingModeName(int scalingMode) {
     }
 }
 
-BufferQueue::BufferQueue(const sp<IGraphicBufferAlloc>& allocator) :
+BufferQueue::BufferQueue(const sp<IGraphicBufferAlloc>& allocator,
+		        const sp<NativeBufferAlloc>& native_allocator) :
     mDefaultWidth(1),
     mDefaultHeight(1),
     mMaxAcquiredBufferCount(1),
@@ -87,10 +88,15 @@ BufferQueue::BufferQueue(const sp<IGraphicBufferAlloc>& allocator) :
 
     ST_LOGV("BufferQueue");
     if (allocator == NULL) {
-        sp<ISurfaceComposer> composer(ComposerService::getComposerService());
-        mGraphicBufferAlloc = composer->createGraphicBufferAlloc();
-        if (mGraphicBufferAlloc == 0) {
-            ST_LOGE("createGraphicBufferAlloc() failed in BufferQueue()");
+        if (native_allocator != NULL) {
+            mNativeBufferAlloc = native_allocator;
+            mGraphicBufferAlloc = 0;
+        } else {
+            sp<ISurfaceComposer> composer(ComposerService::getComposerService());
+            mGraphicBufferAlloc = composer->createGraphicBufferAlloc();
+            if (mGraphicBufferAlloc == 0) {
+                ST_LOGE("createGraphicBufferAlloc() failed in BufferQueue()");
+            }
         }
     } else {
         mGraphicBufferAlloc = allocator;
@@ -435,8 +441,14 @@ status_t BufferQueue::dequeueBuffer(int *outBuf, sp<Fence>* outFence, bool async
 
     if (returnFlags & IGraphicBufferProducer::BUFFER_NEEDS_REALLOCATION) {
         status_t error;
-        sp<GraphicBuffer> graphicBuffer(
-                mGraphicBufferAlloc->createGraphicBuffer(w, h, format, usage, &error));
+        sp<GraphicBuffer> graphicBuffer;
+        if (mNativeBufferAlloc != NULL) {
+            graphicBuffer = mNativeBufferAlloc->createGraphicBuffer(
+                                w, h, format, usage, &error);
+        } else {
+            graphicBuffer = mGraphicBufferAlloc->createGraphicBuffer(
+                                w, h, format, usage, &error);
+        }
         if (graphicBuffer == 0) {
             ST_LOGE("dequeueBuffer: SurfaceComposer::createGraphicBuffer failed");
             return error;
