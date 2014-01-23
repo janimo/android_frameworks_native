@@ -25,6 +25,7 @@
 #include <EGL/eglext.h>
 
 #include <gui/BufferQueue.h>
+#include <gui/GraphicBufferAlloc.h>
 #include <gui/IConsumerListener.h>
 #include <gui/ISurfaceComposer.h>
 #include <private/gui/ComposerService.h>
@@ -92,10 +93,10 @@ BufferQueue::BufferQueue(const sp<IGraphicBufferAlloc>& allocator,
             mNativeBufferAlloc = native_allocator;
             mGraphicBufferAlloc = 0;
         } else {
-            sp<ISurfaceComposer> composer(ComposerService::getComposerService());
-            mGraphicBufferAlloc = composer->createGraphicBufferAlloc();
+            // Allocate directly as with Ubuntu Touch we don't have SF
+            mGraphicBufferAlloc = new GraphicBufferAlloc();
             if (mGraphicBufferAlloc == 0) {
-                ST_LOGE("createGraphicBufferAlloc() failed in BufferQueue()");
+                ST_LOGE("GraphicBufferAlloc() failed in BufferQueue()");
             }
         }
     } else {
