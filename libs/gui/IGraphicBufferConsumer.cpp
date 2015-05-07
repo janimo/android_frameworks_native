@@ -58,11 +58,11 @@ size_t IGraphicBufferConsumer::BufferItem::getPodSize() const {
             sizeof(mScalingMode) +
             sizeof(mTimestamp) +
             sizeof(mIsAutoTimestamp) +
-            sizeof(mFrameNumber) +
+            FlattenableUtils::align<4>(sizeof(mFrameNumber)) +
             sizeof(mBuf) +
-            sizeof(mIsDroppable) +
-            sizeof(mAcquireCalled) +
-            sizeof(mTransformToDisplayInverse);
+            FlattenableUtils::align<4>(sizeof(mIsDroppable)) +
+            FlattenableUtils::align<4>(sizeof(mAcquireCalled)) +
+            FlattenableUtils::align<4>(sizeof(mTransformToDisplayInverse));
     return c;
 }
 
@@ -94,7 +94,7 @@ status_t IGraphicBufferConsumer::BufferItem::flatten(
         void*& buffer, size_t& size, int*& fds, size_t& count) const {
 
     // make sure we have enough space
-    if (count < BufferItem::getFlattenedSize()) {
+    if (size < BufferItem::getFlattenedSize()) {
         return NO_MEMORY;
     }
 
@@ -128,11 +128,15 @@ status_t IGraphicBufferConsumer::BufferItem::flatten(
     FlattenableUtils::write(buffer, size, mScalingMode);
     FlattenableUtils::write(buffer, size, mTimestamp);
     FlattenableUtils::write(buffer, size, mIsAutoTimestamp);
+    size -= FlattenableUtils::align<4>(buffer);
     FlattenableUtils::write(buffer, size, mFrameNumber);
     FlattenableUtils::write(buffer, size, mBuf);
     FlattenableUtils::write(buffer, size, mIsDroppable);
+    size -= FlattenableUtils::align<4>(buffer);
     FlattenableUtils::write(buffer, size, mAcquireCalled);
+    size -= FlattenableUtils::align<4>(buffer);
     FlattenableUtils::write(buffer, size, mTransformToDisplayInverse);
+    size -= FlattenableUtils::align<4>(buffer);
 
     return NO_ERROR;
 }
@@ -144,7 +148,7 @@ status_t IGraphicBufferConsumer::BufferItem::unflatten(
         return NO_MEMORY;
 
     uint32_t flags = 0;
-    FlattenableUtils::read(buffer, size, flags);
+    FlattenableUtils::read<uint32_t>(buffer, size, flags);
 
     if (flags & 1) {
         mGraphicBuffer = new GraphicBuffer();
@@ -170,11 +174,15 @@ status_t IGraphicBufferConsumer::BufferItem::unflatten(
     FlattenableUtils::read(buffer, size, mScalingMode);
     FlattenableUtils::read(buffer, size, mTimestamp);
     FlattenableUtils::read(buffer, size, mIsAutoTimestamp);
+    size -= FlattenableUtils::align<4>(buffer);
     FlattenableUtils::read(buffer, size, mFrameNumber);
     FlattenableUtils::read(buffer, size, mBuf);
     FlattenableUtils::read(buffer, size, mIsDroppable);
+    size -= FlattenableUtils::align<4>(buffer);
     FlattenableUtils::read(buffer, size, mAcquireCalled);
+    size -= FlattenableUtils::align<4>(buffer);
     FlattenableUtils::read(buffer, size, mTransformToDisplayInverse);
+    size -= FlattenableUtils::align<4>(buffer);
 
     return NO_ERROR;
 }

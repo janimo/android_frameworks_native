@@ -127,7 +127,7 @@ nsecs_t Fence::getSignalTime() const {
 }
 
 size_t Fence::getFlattenedSize() const {
-    return 1;
+    return sizeof(getFdCount());
 }
 
 size_t Fence::getFdCount() const {
@@ -157,7 +157,7 @@ status_t Fence::unflatten(void const*& buffer, size_t& size, int const*& fds, si
     }
 
     size_t numFds;
-    FlattenableUtils::read(buffer, size, numFds);
+    FlattenableUtils::read<size_t>(buffer, size, numFds);
 
     if (numFds > 1) {
         return BAD_VALUE;
